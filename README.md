@@ -6,6 +6,63 @@
 
 A production-grade Terraform module for deploying a fully-featured AWS VPC with multi-tier subnets, NAT Gateways, VPC Flow Logs, VPC Endpoints, DHCP Options, and IPv6 dual-stack support. Designed for enterprise workloads running EKS, ECS, RDS, ElastiCache, and serverless applications.
 
+## Architecture Diagram
+
+```mermaid
+flowchart TB
+    subgraph VPC["VPC (10.x.0.0/16)"]
+        IGW["Internet Gateway"]
+        subgraph Public["Public Subnets (Multi-AZ)"]
+            PUB1["Public Subnet AZ-a\n(NAT GW + ALB)"]
+            PUB2["Public Subnet AZ-b\n(NAT GW)"]
+            PUB3["Public Subnet AZ-c\n(NAT GW)"]
+        end
+        subgraph Private["Private Subnets (Multi-AZ)"]
+            PRIV1["Private Subnet AZ-a\n(EKS / ECS)"]
+            PRIV2["Private Subnet AZ-b\n(EKS / ECS)"]
+            PRIV3["Private Subnet AZ-c\n(EKS / ECS)"]
+        end
+        subgraph Database["Database Subnets"]
+            DB1["DB Subnet AZ-a\n(RDS / Aurora)"]
+            DB2["DB Subnet AZ-b"]
+            DB3["DB Subnet AZ-c"]
+        end
+        subgraph Intra["Intra Subnets (No Internet)"]
+            INTRA1["Intra AZ-a"]
+            INTRA2["Intra AZ-b"]
+            INTRA3["Intra AZ-c"]
+        end
+        subgraph ElastiCacheSub["ElastiCache Subnets"]
+            EC1["Cache AZ-a"]
+            EC2["Cache AZ-b"]
+        end
+        subgraph Endpoints["VPC Endpoints"]
+            S3EP["S3 Gateway"]
+            DDBEP["DynamoDB Gateway"]
+            SSMEP["SSM / ECR / STS\n(Interface)"]
+        end
+    end
+
+    subgraph Connectivity["Connectivity"]
+        VPNGW["VPN Gateway\n(BGP ASN)"]
+        FLOWLOGS["VPC Flow Logs\n(CloudWatch / S3 + KMS)"]
+    end
+
+    IGW --> Public
+    PUB1 --> PRIV1
+    PUB2 --> PRIV2
+    PUB3 --> PRIV3
+
+    style VPC fill:#0078D4,color:#fff
+    style Public fill:#FF9900,color:#fff
+    style Private fill:#3F8624,color:#fff
+    style Database fill:#DD344C,color:#fff
+    style Intra fill:#8C4FFF,color:#fff
+    style ElastiCacheSub fill:#FF9900,color:#fff
+    style Endpoints fill:#3F8624,color:#fff
+    style Connectivity fill:#DD344C,color:#fff
+```
+
 ## Overview
 
 This module provisions a complete AWS Virtual Private Cloud (VPC) network topology suitable for production environments. It implements AWS Well-Architected Framework networking best practices including defense-in-depth subnet isolation, encrypted flow logging, least-privilege endpoint access, and high-availability NAT Gateway deployment.
