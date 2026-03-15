@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>terraform-aws-vpc-complete | Architecture</title>
+<style>
+:root{--ink:#0b0c0b;--ink2:#141514;--ink3:#1e1f1e;--border:#2a2b2a;--text:#c8c9c8;--text2:#9a9b9a;--accent:#c8420a;--accent2:#e05a1a;--green:#2ecc71;--blue:#3498db;--yellow:#f1c40f;--red:#e74c3c;--purple:#9b59b6;--mono:"SF Mono","Fira Code","Fira Mono","Roboto Mono",monospace}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--ink);color:var(--text);font-family:var(--mono);font-size:14px;line-height:1.7}
+a{color:var(--accent2);text-decoration:none}a:hover{text-decoration:underline}
+.container{max-width:1200px;margin:0 auto;padding:0 24px}
+header{border-bottom:1px solid var(--border);padding:32px 0}
+header h1{font-size:28px;color:#fff;font-weight:700}header h1 span{color:var(--accent)}
+header p.sub{color:var(--text2);margin-top:6px;font-size:13px}
+.badge{display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:600;margin-right:6px;margin-top:8px}
+.badge-tf{background:#623ce4;color:#fff}.badge-aws{background:#ff9900;color:#111}.badge-mit{background:#2ecc71;color:#111}
+section{padding:40px 0;border-bottom:1px solid var(--border)}section:last-of-type{border-bottom:none}
+h2{font-size:20px;color:#fff;margin-bottom:20px;display:flex;align-items:center;gap:10px}
+h2::before{content:"";width:4px;height:20px;background:var(--accent);display:inline-block;border-radius:2px}
+h3{font-size:15px;color:var(--accent2);margin:16px 0 10px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
+.card{background:var(--ink2);border:1px solid var(--border);border-radius:6px;padding:20px}
+.card h4{color:#fff;font-size:14px;margin-bottom:6px}.card p{color:var(--text2);font-size:12px}
+.card .num{font-size:24px;color:var(--accent);font-weight:700}
+.arch-diagram{background:var(--ink2);border:1px solid var(--border);border-radius:6px;padding:32px;overflow-x:auto;margin:16px 0}
+.flow{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:center}
+.flow .box{background:var(--ink3);border:1px solid var(--border);border-radius:4px;padding:12px 18px;text-align:center;min-width:130px;font-size:12px;color:#fff}
+.flow .box.primary{border-color:var(--accent);background:rgba(200,66,10,0.1)}
+.flow .box.green{border-color:var(--green);background:rgba(46,204,113,0.06)}
+.flow .box.blue{border-color:var(--blue);background:rgba(52,152,219,0.06)}
+.flow .box.purple{border-color:var(--purple);background:rgba(155,89,182,0.06)}
+.flow .box.yellow{border-color:var(--yellow);background:rgba(241,196,15,0.06)}
+.flow .box.red{border-color:var(--red);background:rgba(231,76,60,0.06)}
+.flow .box small{display:block;color:var(--text2);font-size:10px;margin-top:4px}
+.flow .arrow{color:var(--accent);font-size:18px;font-weight:700}
+.flow-col{display:flex;flex-direction:column;align-items:center;gap:8px}
+.flow-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:center}
+.arrow-down{color:var(--accent);font-size:18px}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}
+th{text-align:left;padding:10px 12px;background:var(--ink2);color:var(--accent2);border:1px solid var(--border);font-weight:600}
+td{padding:10px 12px;border:1px solid var(--border);color:var(--text)}
+tr:hover td{background:var(--ink2)}
+code{background:var(--ink3);padding:2px 6px;border-radius:3px;font-size:12px;color:var(--accent2)}
+pre{background:var(--ink2);border:1px solid var(--border);border-radius:6px;padding:16px;overflow-x:auto;font-size:12px;line-height:1.6;margin:12px 0}
+.checklist{list-style:none;padding:0}
+.checklist li{padding:8px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;font-size:13px}
+.checklist li::before{content:"[ ]";color:var(--accent);font-weight:700;font-size:12px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:768px){.grid-2,.cards{grid-template-columns:1fr}}
+footer{border-top:1px solid var(--border);padding:24px 0;text-align:center;color:var(--text2);font-size:11px}
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+<h1><span>//</span> terraform-aws-vpc-complete</h1>
+<p class="sub">Production-grade AWS VPC with multi-tier subnets, NAT Gateways, VPC Flow Logs, VPC Endpoints, DHCP Options, and IPv6 dual-stack support.</p>
+<div>
+<span class="badge badge-tf">Terraform &ge; 1.5.0</span>
+<span class="badge badge-aws">AWS &ge; 5.20.0</span>
+<span class="badge badge-mit">MIT License</span>
+</div>
+</header>
+
+<section>
+<h2>Executive Summary</h2>
+<p>This module provisions a fully-featured AWS VPC with five distinct subnet tiers (public, private, database, intra, and elasticache), enabling defense-in-depth network segmentation. It supports high-availability NAT Gateway deployment (per-AZ or single), IPv6 dual-stack networking, VPC Flow Logs with KMS encryption, gateway endpoints (S3, DynamoDB), interface endpoints for private AWS service access, custom DHCP options, VPN Gateway, and default security group lockdown. Sub-modules provide IPAM integration, VPC peering, and standalone flow log configuration. All resources follow consistent naming and tagging conventions.</p>
+</section>
+
+<section>
+<h2>Overview</h2>
+<div class="cards">
+<div class="card"><div class="num">5</div><h4>Subnet Tiers</h4><p>Public, Private, Database, Intra (no internet), ElastiCache</p></div>
+<div class="card"><div class="num">20+</div><h4>Resource Types</h4><p>VPC, subnets, route tables, NAT GW, IGW, EIGW, VPN GW, endpoints, SG, NACL, DHCP, flow logs</p></div>
+<div class="card"><div class="num">3</div><h4>Sub-Modules</h4><p>IPAM, VPC Peering, Flow Logs</p></div>
+<div class="card"><div class="num">30+</div><h4>Input Variables</h4><p>CIDRs, AZs, NAT, VPN, endpoints, DHCP, flow logs, tags</p></div>
+</div>
+</section>
+
+<section>
+<h2>Architecture Diagram</h2>
+<div class="arch-diagram">
+<div class="flow-col">
+<div class="flow-row">
+<div class="box">Internet</div>
+<div class="arrow">&rarr;</div>
+<div class="box primary">Internet Gateway<small>+ Egress-Only IGW (IPv6)</small></div>
+</div>
+<div class="arrow-down">&darr;</div>
+<div class="flow-row">
+<div class="box yellow">Public Subnet AZ-a<small>NAT GW + ALB</small></div>
+<div class="box yellow">Public Subnet AZ-b<small>NAT GW</small></div>
+<div class="box yellow">Public Subnet AZ-c<small>NAT GW</small></div>
+</div>
+<div class="arrow-down">&darr;</div>
+<div class="flow-row">
+<div class="box green">Private Subnet AZ-a<small>EKS / ECS</small></div>
+<div class="box green">Private Subnet AZ-b<small>EKS / ECS</small></div>
+<div class="box green">Private Subnet AZ-c<small>EKS / ECS</small></div>
+</div>
+<div class="arrow-down">&darr;</div>
+<div class="flow-row">
+<div class="box red">Database Subnet AZ-a<small>RDS / Aurora</small></div>
+<div class="box red">Database Subnet AZ-b<small>RDS / Aurora</small></div>
+<div class="box red">Database Subnet AZ-c<small>RDS / Aurora</small></div>
+</div>
+<div class="arrow-down">&darr;</div>
+<div class="flow-row">
+<div class="box purple">Intra Subnet AZ-a<small>No Internet</small></div>
+<div class="box purple">Intra Subnet AZ-b<small>No Internet</small></div>
+<div class="box blue">ElastiCache AZ-a<small>Cache tier</small></div>
+<div class="box blue">ElastiCache AZ-b<small>Cache tier</small></div>
+</div>
+<div class="arrow-down">&darr;</div>
+<div class="flow-row">
+<div class="box green">S3 Endpoint<small>Gateway (free)</small></div>
+<div class="box green">DynamoDB Endpoint<small>Gateway (free)</small></div>
+<div class="box green">Interface Endpoints<small>SSM, ECR, STS</small></div>
+<div class="box">VPN Gateway<small>BGP ASN</small></div>
+<div class="box blue">Flow Logs<small>CloudWatch / S3 + KMS</small></div>
+</div>
+</div>
+</div>
+</section>
+
+<section>
+<h2>Component Breakdown</h2>
+<table>
+<tr><th>Component</th><th>Resource(s)</th><th>Purpose</th></tr>
+<tr><td>VPC</td><td><code>aws_vpc</code>, <code>aws_vpc_ipv4_cidr_block_association</code></td><td>Primary + secondary CIDR blocks, DNS support/hostnames, IPv6</td></tr>
+<tr><td>Internet Gateway</td><td><code>aws_internet_gateway</code>, <code>aws_egress_only_internet_gateway</code></td><td>Public internet access, IPv6 egress-only for private subnets</td></tr>
+<tr><td>Public Subnets</td><td><code>aws_subnet</code>, <code>aws_route_table</code>, routes</td><td>Multi-AZ with auto-assign public IP, IGW route, IPv6</td></tr>
+<tr><td>Private Subnets</td><td><code>aws_subnet</code>, <code>aws_route_table</code>, NAT routes</td><td>Multi-AZ workload tier with NAT GW outbound access</td></tr>
+<tr><td>Database Subnets</td><td><code>aws_subnet</code>, <code>aws_db_subnet_group</code></td><td>Isolated DB tier with auto-created DB subnet group</td></tr>
+<tr><td>Intra Subnets</td><td><code>aws_subnet</code>, <code>aws_route_table</code> (no routes)</td><td>Completely isolated subnets with no internet access</td></tr>
+<tr><td>ElastiCache Subnets</td><td><code>aws_subnet</code>, <code>aws_elasticache_subnet_group</code></td><td>Cache tier with auto-created ElastiCache subnet group</td></tr>
+<tr><td>NAT Gateways</td><td><code>aws_nat_gateway</code>, <code>aws_eip</code></td><td>Per-AZ (HA) or single NAT for private subnet outbound</td></tr>
+<tr><td>VPN Gateway</td><td><code>aws_vpn_gateway</code></td><td>Site-to-site VPN with configurable BGP ASN</td></tr>
+<tr><td>VPC Endpoints</td><td><code>aws_vpc_endpoint</code> (gateway + interface)</td><td>S3 and DynamoDB gateway endpoints, interface endpoints for any service</td></tr>
+<tr><td>Flow Logs</td><td><code>aws_flow_log</code>, <code>aws_cloudwatch_log_group</code></td><td>VPC traffic logging to CloudWatch or S3 with KMS</td></tr>
+<tr><td>Default SG</td><td><code>aws_default_security_group</code></td><td>Locked down with no rules to prevent accidental use</td></tr>
+<tr><td>DHCP Options</td><td><code>aws_vpc_dhcp_options</code></td><td>Custom DNS domain, name servers, NTP servers</td></tr>
+</table>
+</section>
+
+<section>
+<h2>Data Flow</h2>
+<div class="arch-diagram">
+<div class="flow">
+<div class="box">Internet</div>
+<div class="arrow">&rarr;</div>
+<div class="box primary">IGW</div>
+<div class="arrow">&rarr;</div>
+<div class="box yellow">Public (ALB)</div>
+<div class="arrow">&rarr;</div>
+<div class="box green">Private (App)</div>
+<div class="arrow">&rarr;</div>
+<div class="box red">Database (RDS)</div>
+</div>
+</div>
+<p style="margin-top:8px;color:var(--text2);font-size:13px">Inbound traffic hits the ALB in public subnets, routes to application workloads in private subnets, which query databases in isolated DB subnets. Private subnets access the internet via NAT Gateways for outbound only. Intra subnets have zero internet access. VPC endpoints provide private access to S3 and DynamoDB without traversing the internet.</p>
+</section>
+
+<section>
+<h2>Security Controls</h2>
+<div class="grid-2">
+<div class="card"><h4>Default SG Lockdown</h4><p>Default security group managed with zero ingress/egress rules to prevent accidental attachment</p></div>
+<div class="card"><h4>Encrypted Flow Logs</h4><p>VPC Flow Logs with KMS encryption, configurable retention, 60-second aggregation option</p></div>
+<div class="card"><h4>5-Tier Isolation</h4><p>Defense-in-depth with public, private, database, intra, and cache subnet tiers with separate route tables</p></div>
+<div class="card"><h4>VPC Endpoints</h4><p>Interface endpoints restricted to HTTPS (443) from VPC CIDR via dedicated security group</p></div>
+<div class="card"><h4>Intra Subnets</h4><p>Zero-internet subnets for sensitive workloads that must not reach the internet</p></div>
+<div class="card"><h4>IPv6 Controls</h4><p>Egress-only IGW for private IPv6 outbound, auto-assign on public subnets only</p></div>
+</div>
+</section>
+
+<section>
+<h2>Industry Adaptation</h2>
+<table>
+<tr><th>Workload</th><th>Configuration</th></tr>
+<tr><td>EKS / Kubernetes</td><td>Private subnets with <code>kubernetes.io/role/internal-elb</code> tags, public for ALB</td></tr>
+<tr><td>RDS / Aurora</td><td>Database subnets with auto-created DB subnet group, no internet access</td></tr>
+<tr><td>ElastiCache</td><td>ElastiCache subnets with auto-created subnet group</td></tr>
+<tr><td>Serverless</td><td>Private subnets with interface endpoints for Lambda VPC access</td></tr>
+<tr><td>Hybrid Cloud</td><td>VPN Gateway with custom DHCP options for DNS integration</td></tr>
+</table>
+</section>
+
+<section>
+<h2>Production Readiness Checklist</h2>
+<ul class="checklist">
+<li>Deploy in 3 AZs for high availability</li>
+<li>Use per-AZ NAT Gateways (<code>single_nat_gateway = false</code>) in production</li>
+<li>Enable VPC Flow Logs with <code>enable_flow_logs = true</code></li>
+<li>Set <code>flow_log_max_aggregation_interval = 60</code> for security-sensitive environments</li>
+<li>Enable S3 gateway endpoint to reduce data transfer costs</li>
+<li>Use interface endpoints for services accessed from private subnets (SSM, ECR, STS)</li>
+<li>Keep default security group locked down with no rules</li>
+<li>Use database subnets for RDS/Aurora with no direct internet route</li>
+<li>Use intra subnets for highly sensitive workloads requiring zero internet</li>
+<li>Tag subnets with Tier label for cost allocation and identification</li>
+<li>Plan CIDR blocks carefully -- consider secondary CIDRs for future growth</li>
+</ul>
+</section>
+
+<section>
+<h2>Configuration Reference</h2>
+<h3>Required Variables</h3>
+<table>
+<tr><th>Variable</th><th>Type</th><th>Description</th></tr>
+<tr><td><code>name</code></td><td>string</td><td>Name prefix for all resources (1-64 chars)</td></tr>
+<tr><td><code>cidr_block</code></td><td>string</td><td>Primary IPv4 CIDR block</td></tr>
+<tr><td><code>availability_zones</code></td><td>list(string)</td><td>AZs to deploy subnets into (min 1)</td></tr>
+</table>
+<h3>Key Optional Variables</h3>
+<table>
+<tr><th>Variable</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>enable_ipv6</code></td><td>false</td><td>Enable IPv6 dual-stack</td></tr>
+<tr><td><code>public_subnet_cidrs</code></td><td>[]</td><td>Public subnet CIDRs</td></tr>
+<tr><td><code>private_subnet_cidrs</code></td><td>[]</td><td>Private subnet CIDRs</td></tr>
+<tr><td><code>database_subnet_cidrs</code></td><td>[]</td><td>Database subnet CIDRs</td></tr>
+<tr><td><code>intra_subnet_cidrs</code></td><td>[]</td><td>Intra subnet CIDRs (no internet)</td></tr>
+<tr><td><code>elasticache_subnet_cidrs</code></td><td>[]</td><td>ElastiCache subnet CIDRs</td></tr>
+<tr><td><code>enable_nat_gateway</code></td><td>true</td><td>Enable NAT Gateway(s)</td></tr>
+<tr><td><code>single_nat_gateway</code></td><td>false</td><td>Single NAT for all AZs</td></tr>
+<tr><td><code>enable_flow_logs</code></td><td>true</td><td>Enable VPC Flow Logs</td></tr>
+<tr><td><code>enable_s3_endpoint</code></td><td>true</td><td>S3 gateway endpoint</td></tr>
+<tr><td><code>manage_default_security_group</code></td><td>true</td><td>Lock down default SG</td></tr>
+</table>
+
+<h3>Cost Estimate (us-east-1)</h3>
+<table>
+<tr><th>Resource</th><th>Monthly Cost</th></tr>
+<tr><td>VPC + Subnets</td><td>Free</td></tr>
+<tr><td>NAT Gateway (per AZ)</td><td>~$32 + $0.045/GB</td></tr>
+<tr><td>VPN Gateway</td><td>~$36</td></tr>
+<tr><td>S3/DynamoDB Gateway Endpoints</td><td>Free</td></tr>
+<tr><td>Interface Endpoint (per AZ)</td><td>~$7.20</td></tr>
+<tr><td>Flow Logs (CloudWatch)</td><td>$0.50/GB ingested</td></tr>
+<tr><td>KMS Key</td><td>$1 + $0.03/10K requests</td></tr>
+</table>
+</section>
+
+<section>
+<h2>Deployment</h2>
+<pre>
+module "vpc" {
+  source = "github.com/kogunlowo123/terraform-aws-vpc-complete"
+
+  name       = "prod-vpc"
+  cidr_block = "10.100.0.0/16"
+
+  availability_zones    = ["us-east-1a", "us-east-1b", "us-east-1c"]
+  public_subnet_cidrs   = ["10.100.1.0/24", "10.100.2.0/24", "10.100.3.0/24"]
+  private_subnet_cidrs  = ["10.100.11.0/24", "10.100.12.0/24", "10.100.13.0/24"]
+  database_subnet_cidrs = ["10.100.21.0/24", "10.100.22.0/24", "10.100.23.0/24"]
+
+  enable_nat_gateway = true
+  single_nat_gateway = false
+
+  tags = { Environment = "production" }
+}
+</pre>
+</section>
+
+<section>
+<h2>Links</h2>
+<table>
+<tr><td><a href="https://docs.aws.amazon.com/vpc/latest/userguide/">AWS VPC Documentation</a></td></tr>
+<tr><td><a href="https://docs.aws.amazon.com/vpc/latest/userguide/vpc-nat-gateway.html">NAT Gateway Best Practices</a></td></tr>
+<tr><td><a href="https://docs.aws.amazon.com/vpc/latest/userguide/flow-logs.html">VPC Flow Logs</a></td></tr>
+<tr><td><a href="https://docs.aws.amazon.com/vpc/latest/privatelink/vpc-endpoints.html">VPC Endpoints</a></td></tr>
+<tr><td><a href="https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc">Terraform aws_vpc</a></td></tr>
+</table>
+</section>
+
+<footer>
+<p>terraform-aws-vpc-complete | Architecture Documentation | Generated 2026-03-15</p>
+</footer>
+
+</div>
+</body>
+</html>
