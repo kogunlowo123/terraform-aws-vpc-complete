@@ -1,8 +1,10 @@
 # terraform-aws-vpc-complete
 
-[![Terraform Version](https://img.shields.io/badge/Terraform-%3E%3D1.5.0-623CE4?logo=terraform)](https://www.terraform.io)
-[![AWS Provider](https://img.shields.io/badge/AWS_Provider-%3E%3D5.20.0-FF9900?logo=amazonaws)](https://registry.terraform.io/providers/hashicorp/aws/latest)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+![Terraform](https://img.shields.io/badge/Terraform-%3E%3D1.5-blueviolet?logo=terraform)
+![AWS](https://img.shields.io/badge/AWS-FF9900?logo=amazonaws&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-green)
+![CI](https://img.shields.io/github/actions/workflow/status/kogunlowo123/terraform-aws-vpc-complete/terraform-ci.yml?label=CI)
+![GitHub release](https://img.shields.io/github/v/release/kogunlowo123/terraform-aws-vpc-complete)
 
 A production-grade Terraform module for deploying a fully-featured AWS VPC with multi-tier subnets, NAT Gateways, VPC Flow Logs, VPC Endpoints, DHCP Options, and IPv6 dual-stack support. Designed for enterprise workloads running EKS, ECS, RDS, ElastiCache, and serverless applications.
 
